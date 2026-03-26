@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getFlow, updateFlow, deleteFlow } from "@/lib/store";
+import { getConnection, updateConnection, deleteConnection, listTables } from "@/lib/data/database-manager";
 
 export async function GET(
   _request: Request,
@@ -7,14 +7,13 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const flow = await getFlow(id);
-    if (!flow) {
-      return NextResponse.json({ error: "Flow not found" }, { status: 404 });
-    }
-    return NextResponse.json(flow);
+    const conn = await getConnection(id);
+    if (!conn) return NextResponse.json({ error: "Connection not found" }, { status: 404 });
+    const tables = await listTables(id);
+    return NextResponse.json({ ...conn, tables });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to get flow" },
+      { error: error instanceof Error ? error.message : "Failed to get connection" },
       { status: 500 }
     );
   }
@@ -27,14 +26,12 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const flow = await updateFlow(id, body);
-    if (!flow) {
-      return NextResponse.json({ error: "Flow not found" }, { status: 404 });
-    }
-    return NextResponse.json(flow);
+    const conn = await updateConnection(id, body);
+    if (!conn) return NextResponse.json({ error: "Connection not found" }, { status: 404 });
+    return NextResponse.json(conn);
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to update flow" },
+      { error: error instanceof Error ? error.message : "Failed to update connection" },
       { status: 500 }
     );
   }
@@ -46,14 +43,11 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const deleted = await deleteFlow(id);
-    if (!deleted) {
-      return NextResponse.json({ error: "Flow not found" }, { status: 404 });
-    }
+    await deleteConnection(id);
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to delete flow" },
+      { error: error instanceof Error ? error.message : "Failed to delete connection" },
       { status: 500 }
     );
   }

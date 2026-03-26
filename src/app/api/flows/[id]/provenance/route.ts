@@ -7,17 +7,12 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const events = getProvenanceForFlow(id);
-    const executions = getExecutionsForFlow(id);
+    const events = await getProvenanceForFlow(id);
+    const executions = await getExecutionsForFlow(id);
     return NextResponse.json({ events, executions });
   } catch (error) {
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to get provenance",
-      },
+      { error: error instanceof Error ? error.message : "Failed to get provenance" },
       { status: 500 }
     );
   }

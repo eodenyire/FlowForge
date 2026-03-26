@@ -3,7 +3,7 @@ import { listFlows, createFlow } from "@/lib/store";
 
 export async function GET() {
   try {
-    const flows = listFlows();
+    const flows = await listFlows();
     return NextResponse.json(flows);
   } catch (error) {
     return NextResponse.json(
@@ -16,18 +16,20 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, description } = body;
+    const { name, description, processors, connections, tags, category, documentation } = body;
 
     if (!name || typeof name !== "string") {
-      return NextResponse.json(
-        { error: "Flow name is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Flow name is required" }, { status: 400 });
     }
 
-    const flow = createFlow({
+    const flow = await createFlow({
       name,
       description: description || "",
+      processors,
+      connections,
+      tags,
+      category,
+      documentation,
     });
 
     return NextResponse.json(flow, { status: 201 });

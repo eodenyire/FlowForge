@@ -1,10 +1,42 @@
 export type ProcessorType =
+  // File sources
   | "file-input"
+  | "json-input"
+  | "csv-input"
+  | "excel-input"
+  | "parquet-input"
+  | "xml-input"
+  | "pdf-input"
+  // File sinks
   | "file-output"
+  | "json-output"
+  | "csv-output"
+  | "excel-output"
+  | "parquet-output"
+  | "xml-output"
+  | "pdf-output"
+  // Transform
   | "json-transform"
   | "csv-transform"
   | "filter"
-  | "merge";
+  | "merge"
+  | "aggregate"
+  | "sort"
+  | "deduplicate"
+  | "lookup"
+  // Database sources
+  | "db-query"
+  | "db-create-table"
+  | "db-insert"
+  | "db-upsert"
+  | "db-delete"
+  // Communication
+  | "email-send"
+  | "webhook"
+  // Utility
+  | "data-generator"
+  | "log"
+  | "script";
 
 export type ProcessorStatus = "idle" | "running" | "success" | "error";
 
@@ -22,7 +54,7 @@ export interface ProcessorDefinition {
   type: ProcessorType;
   name: string;
   description: string;
-  category: "source" | "transform" | "sink";
+  category: "source" | "transform" | "sink" | "database" | "communication" | "utility";
   icon: string;
   defaultConfig: ProcessorConfig;
   configSchema: ConfigField[];
@@ -69,6 +101,9 @@ export interface FlowDefinition {
   updatedAt: string;
   lastExecutedAt?: string;
   status: "draft" | "running" | "completed" | "failed";
+  tags?: string[];
+  category?: string;
+  documentation?: string;
 }
 
 export interface ProvenanceEvent {
@@ -104,6 +139,8 @@ export interface FlowListItem {
   createdAt: string;
   updatedAt: string;
   lastExecutedAt?: string;
+  tags?: string[];
+  category?: string;
 }
 
 export interface FlowInputData {
@@ -126,3 +163,21 @@ export interface ProcessorContext {
 export type ProcessorExecuteFn = (
   context: ProcessorContext
 ) => Promise<FlowOutputData>;
+
+export interface WorkflowDocumentation {
+  flowId: string;
+  title: string;
+  description: string;
+  scenarios: WorkflowScenario[];
+  dataFlowDiagram: string;
+  createdAt: string;
+}
+
+export interface WorkflowScenario {
+  name: string;
+  description: string;
+  inputSource: string;
+  outputDestination: string;
+  transformations: string[];
+  databases: string[];
+}

@@ -8,7 +8,7 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const flow = getFlow(id);
+    const flow = await getFlow(id);
     if (!flow) {
       return NextResponse.json({ error: "Flow not found" }, { status: 404 });
     }
@@ -25,8 +25,7 @@ export async function POST(
   } catch (error) {
     return NextResponse.json(
       {
-        error:
-          error instanceof Error ? error.message : "Failed to execute flow",
+        error: error instanceof Error ? error.message : "Failed to execute flow",
       },
       { status: 500 }
     );

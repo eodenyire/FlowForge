@@ -5,34 +5,79 @@ import type {
   ProvenanceEvent,
   FlowListItem,
 } from "@/lib/types";
+import { writeJsonFile, readJsonFile, listFiles, deleteFile } from "@/lib/data/file-store";
 
-const flows = new Map<string, FlowDefinition>();
-const executions = new Map<string, FlowExecution>();
+const FLOWS_PREFIX = "workflows/flows/";
+const EXECUTIONS_PREFIX = "provenance/executions/";
 
-export function createFlow(
-  data: Pick<FlowDefinition, "name" | "description">
-): FlowDefinition {
+// In-memory cache backed by disk
+const flowsCache = new Map<string, FlowDefinition>();
+const executionsCache = new Map<string, FlowExecution>();
+let loaded = false;
+
+async function ensureLoaded() {
+  if (loaded) return;
+  loaded = true;
+  try {
+    const files = await listFiles(FLOWS_PREFIX);
+    for (const file of files) {
+      if (file.endsWith(".json")) {
+        const flow = await readJsonFile<FlowDefinition>(`${FLOWS_PREFIX}${file}`);
+        if (flow) flowsCache.set(flow.id, flow);
+      }
+    }
+    const execFiles = await listFiles(EXECUTIONS_PREFIX);
+    for (const file of execFiles) {
+      if (file.endsWith(".json")) {
+        const exec = await readJsonFile<FlowExecution>(`${EXECUTIONS_PREFIX}${file}`);
+        if (exec) executionsCache.set(exec.id, exec);
+      }
+    }
+  } catch {
+    // First run, no files yet
+  }
+}
+
+async function persistFlow(flow: FlowDefinition) {
+  flowsCache.set(flow.id, flow);
+  await writeJsonFile(`${FLOWS_PREFIX}${flow.id}.json`, flow);
+}
+
+async function persistExecution(exec: FlowExecution) {
+  executionsCache.set(exec.id, exec);
+  await writeJsonFile(`${EXECUTIONS_PREFIX}${exec.id}.json`, exec);
+}
+
+export async function createFlow(
+  data: Partial<FlowDefinition> & { name: string; description: string }
+): Promise<FlowDefinition> {
+  await ensureLoaded();
   const now = new Date().toISOString();
   const flow: FlowDefinition = {
     id: uuidv4(),
     name: data.name,
     description: data.description,
-    processors: [],
-    connections: [],
+    processors: data.processors || [],
+    connections: data.connections || [],
+    tags: data.tags || [],
+    category: data.category,
+    documentation: data.documentation,
     createdAt: now,
     updatedAt: now,
     status: "draft",
   };
-  flows.set(flow.id, flow);
+  await persistFlow(flow);
   return flow;
 }
 
-export function getFlow(id: string): FlowDefinition | undefined {
-  return flows.get(id);
+export async function getFlow(id: string): Promise<FlowDefinition | undefined> {
+  await ensureLoaded();
+  return flowsCache.get(id);
 }
 
-export function listFlows(): FlowListItem[] {
-  return Array.from(flows.values()).map((f) => ({
+export async function listFlows(): Promise<FlowListItem[]> {
+  await ensureLoaded();
+  return Array.from(flowsCache.values()).map((f) => ({
     id: f.id,
     name: f.name,
     description: f.description,
@@ -42,29 +87,36 @@ export function listFlows(): FlowListItem[] {
     createdAt: f.createdAt,
     updatedAt: f.updatedAt,
     lastExecutedAt: f.lastExecutedAt,
+    tags: f.tags,
+    category: f.category,
   }));
 }
 
-export function updateFlow(
+export async function updateFlow(
   id: string,
-  updates: Partial<Pick<FlowDefinition, "name" | "description" | "processors" | "connections" | "status" | "lastExecutedAt">>
-): FlowDefinition | undefined {
-  const flow = flows.get(id);
+  updates: Partial<FlowDefinition>
+): Promise<FlowDefinition | undefined> {
+  await ensureLoaded();
+  const flow = flowsCache.get(id);
   if (!flow) return undefined;
   const updated: FlowDefinition = {
     ...flow,
     ...updates,
     updatedAt: new Date().toISOString(),
   };
-  flows.set(id, updated);
+  await persistFlow(updated);
   return updated;
 }
 
-export function deleteFlow(id: string): boolean {
-  return flows.delete(id);
+export async function deleteFlow(id: string): Promise<boolean> {
+  await ensureLoaded();
+  flowsCache.delete(id);
+  await deleteFile(`${FLOWS_PREFIX}${id}.json`);
+  return true;
 }
 
-export function createExecution(flowId: string): FlowExecution {
+export async function createExecution(flowId: string): Promise<FlowExecution> {
+  await ensureLoaded();
   const execution: FlowExecution = {
     id: uuidv4(),
     flowId,
@@ -72,30 +124,33 @@ export function createExecution(flowId: string): FlowExecution {
     status: "running",
     events: [],
   };
-  executions.set(execution.id, execution);
+  await persistExecution(execution);
   return execution;
 }
 
-export function getExecution(id: string): FlowExecution | undefined {
-  return executions.get(id);
+export async function getExecution(id: string): Promise<FlowExecution | undefined> {
+  await ensureLoaded();
+  return executionsCache.get(id);
 }
 
-export function updateExecution(
+export async function updateExecution(
   id: string,
   updates: Partial<FlowExecution>
-): FlowExecution | undefined {
-  const exec = executions.get(id);
+): Promise<FlowExecution | undefined> {
+  await ensureLoaded();
+  const exec = executionsCache.get(id);
   if (!exec) return undefined;
   const updated = { ...exec, ...updates };
-  executions.set(id, updated);
+  await persistExecution(updated);
   return updated;
 }
 
-export function addProvenanceEvent(
+export async function addProvenanceEvent(
   executionId: string,
   event: Omit<ProvenanceEvent, "id" | "timestamp">
-): ProvenanceEvent | undefined {
-  const exec = executions.get(executionId);
+): Promise<ProvenanceEvent | undefined> {
+  await ensureLoaded();
+  const exec = executionsCache.get(executionId);
   if (!exec) return undefined;
   const provenanceEvent: ProvenanceEvent = {
     ...event,
@@ -103,12 +158,14 @@ export function addProvenanceEvent(
     timestamp: new Date().toISOString(),
   };
   exec.events.push(provenanceEvent);
+  await persistExecution(exec);
   return provenanceEvent;
 }
 
-export function getProvenanceForFlow(flowId: string): ProvenanceEvent[] {
+export async function getProvenanceForFlow(flowId: string): Promise<ProvenanceEvent[]> {
+  await ensureLoaded();
   const events: ProvenanceEvent[] = [];
-  for (const exec of executions.values()) {
+  for (const exec of executionsCache.values()) {
     if (exec.flowId === flowId) {
       events.push(...exec.events);
     }
@@ -118,8 +175,9 @@ export function getProvenanceForFlow(flowId: string): ProvenanceEvent[] {
   );
 }
 
-export function getExecutionsForFlow(flowId: string): FlowExecution[] {
-  return Array.from(executions.values())
+export async function getExecutionsForFlow(flowId: string): Promise<FlowExecution[]> {
+  await ensureLoaded();
+  return Array.from(executionsCache.values())
     .filter((e) => e.flowId === flowId)
     .sort(
       (a, b) =>
