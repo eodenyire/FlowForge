@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Next.js Template",
-  description: "A minimal Next.js starter template",
+  title: "FlowForge - Visual Data Flow Orchestration",
+  description:
+    "Build, visualize, and execute data pipelines with a drag-and-drop interface. Inspired by Apache NiFi.",
 };
 
 export default function RootLayout({

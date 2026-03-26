@@ -1,120 +1,85 @@
-# System Patterns: Next.js Starter Template
+# System Patterns: FlowForge
 
 ## Architecture Overview
 
 ```
 src/
-├── app/                    # Next.js App Router
-│   ├── layout.tsx          # Root layout + metadata
-│   ├── page.tsx            # Home page
-│   ├── globals.css         # Tailwind imports + global styles
-│   └── favicon.ico         # Site icon
-└── (expand as needed)
-    ├── components/         # React components (add when needed)
-    ├── lib/                # Utilities and helpers (add when needed)
-    └── db/                 # Database files (add via recipe)
+├── app/
+│   ├── page.tsx                    # Landing page
+│   ├── layout.tsx                  # Root layout
+│   ├── globals.css                 # Global styles
+│   ├── flows/
+│   │   ├── page.tsx                # Flow listing
+│   │   └── [id]/page.tsx           # Flow editor
+│   └── api/
+│       ├── processors/route.ts     # Processor definitions API
+│       └── flows/
+│           ├── route.ts            # Flow CRUD
+│           └── [id]/
+│               ├── route.ts        # Single flow CRUD
+│               ├── execute/route.ts # Execute flow
+│               └── provenance/route.ts # Provenance data
+├── components/
+│   └── flow-editor/
+│       ├── FlowEditor.tsx          # Main editor (orchestrator)
+│       ├── FlowCanvas.tsx          # Canvas with nodes and SVG connections
+│       ├── ProcessorPalette.tsx    # Sidebar processor list
+│       ├── PropertiesPanel.tsx     # Node config editor
+│       ├── FlowToolbar.tsx         # Top toolbar with actions
+│       └── ProvenanceLog.tsx       # Execution log panel
+└── lib/
+    ├── types/index.ts              # All TypeScript types
+    ├── store/index.ts              # In-memory data store
+    ├── engine/index.ts             # Flow execution engine
+    └── processors/
+        ├── index.ts                # Barrel export
+        ├── definitions.ts          # Processor type definitions
+        └── executors.ts            # Processor execution logic
 ```
 
 ## Key Design Patterns
 
-### 1. App Router Pattern
+### 1. Client-Server Split
+- **Server**: API routes handle flow CRUD and execution
+- **Client**: `"use client"` components for the visual editor
+- **Shared**: Types and processor definitions are isomorphic
 
-Uses Next.js App Router with file-based routing:
+### 2. In-Memory Store Pattern
+```typescript
+const flows = new Map<string, FlowDefinition>();
+// CRUD operations: createFlow, getFlow, listFlows, updateFlow, deleteFlow
 ```
-src/app/
-├── page.tsx           # Route: /
-├── about/page.tsx     # Route: /about
-├── blog/
-│   ├── page.tsx       # Route: /blog
-│   └── [slug]/page.tsx # Route: /blog/:slug
-└── api/
-    └── route.ts       # API Route: /api
+- Simple Map-based storage for MVP
+- Could be replaced with database persistence later
+
+### 3. Flow Execution Engine
+- Topological sort determines execution order
+- Processes flow as a directed acyclic graph (DAG)
+- Each processor receives input from upstream, produces output for downstream
+- Provenance events logged at each step
+
+### 4. Processor Plugin Pattern
+```typescript
+// Each processor has: definition (schema) + executor (logic)
+processorDefinitions[type] → ProcessorDefinition
+getProcessorExecutor(type) → (ctx) => FlowOutputData
 ```
+- Definitions describe UI (config schema, ports)
+- Executors contain runtime logic
+- Easy to add new processors
 
-### 2. Component Organization Pattern (When Expanding)
-
-```
-src/components/
-├── ui/                # Reusable UI components (Button, Card, etc.)
-├── layout/            # Layout components (Header, Footer)
-├── sections/          # Page sections (Hero, Features, etc.)
-└── forms/             # Form components
-```
-
-### 3. Server Components by Default
-
-All components are Server Components unless marked with `"use client"`:
-```tsx
-// Server Component (default) - can fetch data, access DB
-export default function Page() {
-  return <div>Server rendered</div>;
-}
-
-// Client Component - for interactivity
-"use client";
-export default function Counter() {
-  const [count, setCount] = useState(0);
-  return <button onClick={() => setCount(c => c + 1)}>{count}</button>;
-}
-```
-
-### 4. Layout Pattern
-
-Layouts wrap pages and can be nested:
-```tsx
-// src/app/layout.tsx - Root layout
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
-  );
-}
-
-// src/app/dashboard/layout.tsx - Nested layout
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex">
-      <Sidebar />
-      <main>{children}</main>
-    </div>
-  );
-}
-```
+### 5. Canvas Interaction Pattern
+- HTML elements for processor nodes (better text rendering)
+- SVG for connection lines (Bezier curves)
+- Mouse event handlers for drag-and-drop
+- Port-based connection model (output → input)
 
 ## Styling Conventions
 
-### Tailwind CSS Usage
-- Utility classes directly on elements
-- Component composition for repeated patterns
-- Responsive: `sm:`, `md:`, `lg:`, `xl:`
-
-### Common Patterns
-```tsx
-// Container
-<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-// Responsive grid
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-// Flexbox centering
-<div className="flex items-center justify-center">
-```
-
-## File Naming Conventions
-
-- Components: PascalCase (`Button.tsx`, `Header.tsx`)
-- Utilities: camelCase (`utils.ts`, `helpers.ts`)
-- Pages/Routes: lowercase (`page.tsx`, `layout.tsx`)
-- Directories: kebab-case (`api-routes/`) or lowercase (`components/`)
-
-## State Management
-
-For simple needs:
-- `useState` for local component state
-- `useContext` for shared state
-- Server Components for data fetching
-
-For complex needs (add when necessary):
-- Zustand for client state
-- React Query for server state
+- Dark theme (neutral-950 base)
+- Color-coded categories:
+  - Source: emerald tones
+  - Transform: blue tones
+  - Sink: amber tones
+- Tailwind utility classes throughout
+- Status indicators: green (success), blue (running), red (error), gray (idle)
