@@ -19,6 +19,13 @@ FlowForge is a comprehensive Apache NiFi-inspired data flow management platform 
 - [x] REST API for all resources
 - [x] Visual drag-and-drop flow designer canvas
 - [x] 10 pre-built workflow templates with full documentation
+- [x] Sample data generator (225+ records across 6 datasets)
+- [x] Data browser page (file tree, JSON/CSV viewer)
+- [x] Database connections page (connection list, table browser)
+- [x] Workflow library page with documentation viewer
+- [x] One-click setup endpoint
+- [x] Comprehensive documentation (README, 7 docs/ files)
+- [x] 10 pre-built workflow templates with full documentation
 - [x] Sample data generator (20 customers, 20 products, 50 orders, 15 employees, 100 transactions, 20 inventory items)
 - [x] Data browser page (file tree, JSON/CSV viewer)
 - [x] Database connections page (connection list, table browser)
@@ -48,6 +55,14 @@ FlowForge is a comprehensive Apache NiFi-inspired data flow management platform 
 | `src/lib/processors/` | 30+ processor definitions & executors |
 | `src/lib/data/` | Sample data, file store, database manager |
 | `src/lib/workflows/` | 10 workflow templates |
+| `README.md` | Project overview and quick start guide |
+| `docs/architecture.md` | System design, data flow, code structure |
+| `docs/processors.md` | All 30+ processors with config schemas |
+| `docs/workflows.md` | All 10 workflow templates with documentation |
+| `docs/databases.md` | All 14 database adapters and connection management |
+| `docs/sample-data.md` | Sample datasets and file formats |
+| `docs/api-reference.md` | All REST API endpoints |
+| `docs/data-persistence.md` | Storage layout and data formats |
 | `data/` | Persisted data directory (samples, outputs, databases, workflows, provenance) |
 
 ## Routes
