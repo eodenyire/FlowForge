@@ -181,3 +181,81 @@ export interface WorkflowScenario {
   transformations: string[];
   databases: string[];
 }
+
+// Auth types
+export type UserRole = "admin" | "engineer" | "viewer";
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  passwordHash: string;
+  companyId: string | null;
+  role: UserRole;
+  createdAt: string;
+  updatedAt: string;
+  lastLoginAt?: string;
+}
+
+export interface PublicUser {
+  id: string;
+  email: string;
+  name: string;
+  companyId: string | null;
+  role: UserRole;
+  createdAt: string;
+  lastLoginAt?: string;
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  description: string;
+  industry: string;
+  size: string;
+  website: string;
+  logoUrl: string;
+  ownerId: string;
+  settings: CompanySettings;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CompanySettings {
+  defaultDataFormats: string[];
+  maxFlowRetentionDays: number;
+  enableProvenance: boolean;
+  allowedProcessorTypes: string[];
+}
+
+export interface Session {
+  id: string;
+  userId: string;
+  token: string;
+  expiresAt: string;
+  createdAt: string;
+}
+
+export interface SignupRequest {
+  email: string;
+  password: string;
+  name: string;
+  companyName?: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  user: PublicUser;
+  company: Company | null;
+  token: string;
+}
+
+export interface InviteEngineerRequest {
+  email: string;
+  name: string;
+  role: UserRole;
+}
