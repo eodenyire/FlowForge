@@ -334,6 +334,158 @@ export const processorDefinitions: Record<ProcessorType, ProcessorDefinition> = 
     ],
     inputs: inputPort(), outputs: outputPort(),
   },
+  // Multi-language script transforms
+  "sql-transform": {
+    type: "sql-transform", name: "SQL Transform", description: "Transform data using SQL queries against a database connection",
+    category: "transform", icon: "sql",
+    defaultConfig: { connectionId: "", query: "", outputTable: "_flowforge_result" },
+    configSchema: [
+      { key: "connectionId", label: "Database Connection", type: "text", required: true, placeholder: "Select or enter connection ID" },
+      { key: "query", label: "SQL Query", type: "textarea", required: true, placeholder: "SELECT * FROM input_data WHERE amount > 1000\n-- Use :input to reference input data\n-- SELECT * FROM :input WHERE status = 'active'" },
+      { key: "outputTable", label: "Output Table Name", type: "text", required: false, defaultValue: "_flowforge_result", placeholder: "_flowforge_result" },
+    ],
+    inputs: inputPort(), outputs: outputPort(),
+  },
+  "python-script": {
+    type: "python-script", name: "Python Script", description: "Transform data using Python code (pandas-compatible)",
+    category: "transform", icon: "python",
+    defaultConfig: { code: "import pandas as pd\n\ndef transform(records):\n    df = pd.DataFrame(records)\n    # Add your transformation logic here\n    return df.to_dict('records')", timeout: 60 },
+    configSchema: [
+      { key: "code", label: "Python Code", type: "textarea", required: true, placeholder: "import pandas as pd\n\ndef transform(records):\n    df = pd.DataFrame(records)\n    df['processed'] = True\n    return df.to_dict('records')" },
+      { key: "timeout", label: "Timeout (seconds)", type: "number", required: false, defaultValue: 60 },
+    ],
+    inputs: inputPort(), outputs: outputPort(),
+  },
+  "ruby-script": {
+    type: "ruby-script", name: "Ruby Script", description: "Transform data using Ruby code",
+    category: "transform", icon: "ruby",
+    defaultConfig: { code: "# Transform records array\nrecords.map do |record|\n  record.merge('processed' => true)\nend", timeout: 60 },
+    configSchema: [
+      { key: "code", label: "Ruby Code", type: "textarea", required: true, placeholder: "# records is an array of hashes\nrecords.map do |record|\n  record.merge('transformed' => true)\nend" },
+      { key: "timeout", label: "Timeout (seconds)", type: "number", required: false, defaultValue: 60 },
+    ],
+    inputs: inputPort(), outputs: outputPort(),
+  },
+  "scala-script": {
+    type: "scala-script", name: "Scala Script", description: "Transform data using Scala code (Spark-compatible)",
+    category: "transform", icon: "scala",
+    defaultConfig: { code: "// Transform using Scala\nval transformed = records.map(r => r + (\"processed\" -> true))", timeout: 120 },
+    configSchema: [
+      { key: "code", label: "Scala Code", type: "textarea", required: true, placeholder: "// records: List[Map[String, Any]]\nval transformed = records.map(r => r + (\"processed\" -> true))\ntransformed" },
+      { key: "connectionId", label: "Spark Connection (optional)", type: "text", required: false, placeholder: "Spark cluster connection ID" },
+      { key: "timeout", label: "Timeout (seconds)", type: "number", required: false, defaultValue: 120 },
+    ],
+    inputs: inputPort(), outputs: outputPort(),
+  },
+  "java-script": {
+    type: "java-script", name: "Java Script", description: "Transform data using Java code",
+    category: "transform", icon: "java",
+    defaultConfig: { code: "// Transform records using Java\nfor (Map<String, Object> record : records) {\n    record.put(\"processed\", true);\n}", timeout: 120 },
+    configSchema: [
+      { key: "code", label: "Java Code", type: "textarea", required: true, placeholder: "// records is List<Map<String, Object>>\nfor (Map<String, Object> record : records) {\n    record.put(\"transformed\", true);\n}\nreturn records;" },
+      { key: "timeout", label: "Timeout (seconds)", type: "number", required: false, defaultValue: 120 },
+    ],
+    inputs: inputPort(), outputs: outputPort(),
+  },
+  "r-script": {
+    type: "r-script", name: "R Script", description: "Transform data using R code (tidyverse-compatible)",
+    category: "transform", icon: "r",
+    defaultConfig: { code: "library(dplyr)\n\ntransform <- function(records) {\n  records %>% mutate(processed = TRUE)\n}", timeout: 60 },
+    configSchema: [
+      { key: "code", label: "R Code", type: "textarea", required: true, placeholder: "library(dplyr)\n\ntransform <- function(records) {\n  records %>%\n    mutate(processed = TRUE) %>%\n    filter(!is.na(value))\n}" },
+      { key: "timeout", label: "Timeout (seconds)", type: "number", required: false, defaultValue: 60 },
+    ],
+    inputs: inputPort(), outputs: outputPort(),
+  },
+  // Remote file operations
+  "ftp-upload": {
+    type: "ftp-upload", name: "FTP Upload", description: "Upload data as a file to an FTP server",
+    category: "sink", icon: "ftp",
+    defaultConfig: { connectionId: "", remotePath: "/output/data.csv", format: "csv" },
+    configSchema: [
+      { key: "connectionId", label: "FTP Connection", type: "text", required: true, placeholder: "FTP connection ID" },
+      { key: "remotePath", label: "Remote Path", type: "text", required: true, placeholder: "/output/data.csv" },
+      { key: "format", label: "File Format", type: "select", required: true, defaultValue: "csv", options: [{ label: "CSV", value: "csv" }, { label: "JSON", value: "json" }, { label: "Excel", value: "xlsx" }] },
+    ],
+    inputs: inputPort(), outputs: noPorts(),
+  },
+  "ftp-download": {
+    type: "ftp-download", name: "FTP Download", description: "Download a file from an FTP server",
+    category: "source", icon: "ftp",
+    defaultConfig: { connectionId: "", remotePath: "/input/data.csv", fileType: "csv" },
+    configSchema: [
+      { key: "connectionId", label: "FTP Connection", type: "text", required: true, placeholder: "FTP connection ID" },
+      { key: "remotePath", label: "Remote Path", type: "text", required: true, placeholder: "/input/data.csv" },
+      { key: "fileType", label: "File Type", type: "select", required: true, defaultValue: "csv", options: [{ label: "CSV", value: "csv" }, { label: "JSON", value: "json" }] },
+    ],
+    inputs: noPorts(), outputs: outputPort(),
+  },
+  "sftp-upload": {
+    type: "sftp-upload", name: "SFTP Upload", description: "Upload data as a file to an SFTP server",
+    category: "sink", icon: "sftp",
+    defaultConfig: { connectionId: "", remotePath: "/output/data.csv", format: "csv" },
+    configSchema: [
+      { key: "connectionId", label: "SFTP Connection", type: "text", required: true, placeholder: "SFTP connection ID" },
+      { key: "remotePath", label: "Remote Path", type: "text", required: true, placeholder: "/output/data.csv" },
+      { key: "format", label: "File Format", type: "select", required: true, defaultValue: "csv", options: [{ label: "CSV", value: "csv" }, { label: "JSON", value: "json" }, { label: "Excel", value: "xlsx" }] },
+    ],
+    inputs: inputPort(), outputs: noPorts(),
+  },
+  "sftp-download": {
+    type: "sftp-download", name: "SFTP Download", description: "Download a file from an SFTP server",
+    category: "source", icon: "sftp",
+    defaultConfig: { connectionId: "", remotePath: "/input/data.csv", fileType: "csv" },
+    configSchema: [
+      { key: "connectionId", label: "SFTP Connection", type: "text", required: true, placeholder: "SFTP connection ID" },
+      { key: "remotePath", label: "Remote Path", type: "text", required: true, placeholder: "/input/data.csv" },
+      { key: "fileType", label: "File Type", type: "select", required: true, defaultValue: "csv", options: [{ label: "CSV", value: "csv" }, { label: "JSON", value: "json" }] },
+    ],
+    inputs: noPorts(), outputs: outputPort(),
+  },
+  "s3-read": {
+    type: "s3-read", name: "S3 Read", description: "Read data from an S3 bucket",
+    category: "source", icon: "s3",
+    defaultConfig: { connectionId: "", objectKey: "data/input.csv", fileType: "csv" },
+    configSchema: [
+      { key: "connectionId", label: "S3 Connection", type: "text", required: true, placeholder: "S3 connection ID" },
+      { key: "objectKey", label: "Object Key", type: "text", required: true, placeholder: "data/input.csv" },
+      { key: "fileType", label: "File Type", type: "select", required: true, defaultValue: "csv", options: [{ label: "CSV", value: "csv" }, { label: "JSON", value: "json" }, { label: "Parquet", value: "parquet" }] },
+    ],
+    inputs: noPorts(), outputs: outputPort(),
+  },
+  "s3-write": {
+    type: "s3-write", name: "S3 Write", description: "Write data to an S3 bucket",
+    category: "sink", icon: "s3",
+    defaultConfig: { connectionId: "", objectKey: "data/output.csv", format: "csv" },
+    configSchema: [
+      { key: "connectionId", label: "S3 Connection", type: "text", required: true, placeholder: "S3 connection ID" },
+      { key: "objectKey", label: "Object Key", type: "text", required: true, placeholder: "data/output.csv" },
+      { key: "format", label: "Format", type: "select", required: true, defaultValue: "csv", options: [{ label: "CSV", value: "csv" }, { label: "JSON", value: "json" }, { label: "Parquet", value: "parquet" }] },
+    ],
+    inputs: inputPort(), outputs: noPorts(),
+  },
+  "api-call": {
+    type: "api-call", name: "API Call", description: "Call an API endpoint and process the response",
+    category: "communication", icon: "api",
+    defaultConfig: { connectionId: "", endpoint: "/data", method: "GET", bodyTemplate: "" },
+    configSchema: [
+      { key: "connectionId", label: "API Connection", type: "text", required: true, placeholder: "API connection ID" },
+      { key: "endpoint", label: "Endpoint Path", type: "text", required: true, placeholder: "/api/v1/data" },
+      { key: "method", label: "HTTP Method", type: "select", required: true, defaultValue: "GET", options: [{ label: "GET", value: "GET" }, { label: "POST", value: "POST" }, { label: "PUT", value: "PUT" }, { label: "DELETE", value: "DELETE" }] },
+      { key: "bodyTemplate", label: "Request Body Template (JSON)", type: "textarea", required: false, placeholder: '{"data": {{records}} }' },
+    ],
+    inputs: inputPort(), outputs: outputPort(),
+  },
+  "api-response": {
+    type: "api-response", name: "API Response", description: "Return data as an API response",
+    category: "communication", icon: "api",
+    defaultConfig: { statusCode: 200, contentType: "application/json" },
+    configSchema: [
+      { key: "statusCode", label: "Status Code", type: "number", required: false, defaultValue: 200 },
+      { key: "contentType", label: "Content Type", type: "select", required: true, defaultValue: "application/json", options: [{ label: "JSON", value: "application/json" }, { label: "CSV", value: "text/csv" }, { label: "XML", value: "application/xml" }] },
+    ],
+    inputs: inputPort(), outputs: noPorts(),
+  },
 };
 
 export function getProcessorDefinition(type: ProcessorType): ProcessorDefinition {

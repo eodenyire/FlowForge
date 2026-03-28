@@ -70,6 +70,14 @@ function toPublicUser(user: User): PublicUser {
     name: user.name,
     companyId: user.companyId,
     role: user.role,
+    title: user.title,
+    department: user.department,
+    specializations: user.specializations,
+    bio: user.bio,
+    phone: user.phone,
+    location: user.location,
+    yearsExperience: user.yearsExperience,
+    preferredLanguages: user.preferredLanguages,
     createdAt: user.createdAt,
     lastLoginAt: user.lastLoginAt,
   };
@@ -82,6 +90,14 @@ export async function createUser(data: {
   name: string;
   companyId?: string | null;
   role?: UserRole;
+  title?: string;
+  department?: string;
+  specializations?: string[];
+  bio?: string;
+  phone?: string;
+  location?: string;
+  yearsExperience?: number;
+  preferredLanguages?: string[];
 }): Promise<User> {
   await ensureLoaded();
 
@@ -100,6 +116,14 @@ export async function createUser(data: {
     passwordHash: hashPassword(data.password),
     companyId: data.companyId ?? null,
     role: data.role ?? "admin",
+    title: data.title ?? "",
+    department: data.department ?? "",
+    specializations: data.specializations ?? [],
+    bio: data.bio ?? "",
+    phone: data.phone ?? "",
+    location: data.location ?? "",
+    yearsExperience: data.yearsExperience ?? 0,
+    preferredLanguages: data.preferredLanguages ?? [],
     createdAt: now,
     updatedAt: now,
   };

@@ -98,22 +98,22 @@ export default function DashboardPage() {
                 Dashboard
               </Link>
               <Link
-                href="/flows"
+                href="/processor-groups"
                 className="text-sm text-neutral-400 hover:text-white transition-colors"
               >
-                Flows
+                Processors
+              </Link>
+              <Link
+                href="/connections"
+                className="text-sm text-neutral-400 hover:text-white transition-colors"
+              >
+                Connections
               </Link>
               <Link
                 href="/workflows"
                 className="text-sm text-neutral-400 hover:text-white transition-colors"
               >
                 Workflows
-              </Link>
-              <Link
-                href="/databases"
-                className="text-sm text-neutral-400 hover:text-white transition-colors"
-              >
-                Databases
               </Link>
               <Link
                 href="/data"
@@ -126,6 +126,12 @@ export default function DashboardPage() {
                 className="text-sm text-neutral-400 hover:text-white transition-colors"
               >
                 Team
+              </Link>
+              <Link
+                href="/profile"
+                className="text-sm text-neutral-400 hover:text-white transition-colors"
+              >
+                Profile
               </Link>
             </nav>
           </div>
