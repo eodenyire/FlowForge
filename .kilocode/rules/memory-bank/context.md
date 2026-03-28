@@ -2,132 +2,157 @@
 
 ## Current State
 
-**Application Status**: ✅ Full Enterprise Data Flow Platform
+**Application Status**: Full NiFi-Style Enterprise Data Flow Platform
 
-FlowForge is a comprehensive Apache NiFi-inspired data flow management platform with file processing across all major formats, 14 database adapters (including cloud), 10 pre-built workflow templates, file-based persistence, and full UI for browsing data and managing connections.
+FlowForge is a comprehensive Apache NiFi-inspired data flow management platform with processor groups, multi-language script transforms, centralized connection management (databases, file servers, APIs, SMTP), engineer profiles, user authentication, company profiles, and team management.
 
 ## Recently Completed
 
 - [x] Core type definitions for flows, processors, connections, provenance
 - [x] File-based persistence layer (JSON files in data/ directory)
-- [x] 30+ processors across 6 categories (source, transform, sink, database, communication, utility)
+- [x] 40+ processors across 8 categories (source, transform, sink, database, communication, utility, multi-language script, remote operations)
 - [x] File format support: JSON, CSV, Excel (.xlsx), Parquet, XML, PDF reports
-- [x] 14 database adapters: MySQL, PostgreSQL, MSSQL, Oracle, MongoDB, Cassandra, Neo4j, GCP Cloud SQL, GCP BigQuery, AWS RDS, AWS DynamoDB, AWS Redshift, Azure SQL, Azure Cosmos DB
-- [x] Database processors: Query, Create Table, Insert, Upsert, Delete
-- [x] Email send and webhook processors
+- [x] Multi-language script transforms: SQL, Python, Ruby, Scala, Java, R
+- [x] Remote file operations: FTP upload/download, SFTP upload/download, S3 read/write
+- [x] API call and API response processors
 - [x] Flow execution engine with topological sorting
 - [x] REST API for all resources
 - [x] Visual drag-and-drop flow designer canvas
 - [x] 10 pre-built workflow templates with full documentation
-- [x] Sample data generator (225+ records across 6 datasets)
-- [x] Data browser page (file tree, JSON/CSV viewer)
-- [x] Database connections page (connection list, table browser)
-- [x] Workflow library page with documentation viewer
-- [x] One-click setup endpoint
-- [x] Comprehensive documentation (README, 7 docs/ files)
-- [x] 10 pre-built workflow templates with full documentation
-- [x] Sample data generator (20 customers, 20 products, 50 orders, 15 employees, 100 transactions, 20 inventory items)
-- [x] Data browser page (file tree, JSON/CSV viewer)
-- [x] Database connections page (connection list, table browser)
-- [x] Workflow library page with documentation viewer
-- [x] One-click setup endpoint (creates all sample data, DB connections, workflow templates)
+- [x] Sample data generator and data browser
 - [x] User authentication system with scrypt password hashing and session tokens
 - [x] Company profile creation and management
 - [x] Team member invitation with role-based access (admin, engineer, viewer)
-- [x] Auth API routes: signup, login, logout, session check
-- [x] Company API routes: CRUD, invite members, list members
-- [x] Signup page with company name optional field
-- [x] Login page with session token storage
-- [x] Company setup page (industry, size, description, website)
-- [x] Dashboard page with auth guard and navigation header
-- [x] Team management page with invite form and member list
-- [x] Landing page updated with Login/Signup navigation
+- [x] Engineer profile page (title, department, specializations, bio, preferred languages, experience)
+- [x] NiFi-style Processor Groups with nested hierarchy
+- [x] Pipelines within processor groups (each pipeline = a flow)
+- [x] Centralized Connections Store for all connection types
+- [x] Database connections: PostgreSQL, MySQL, MariaDB, MSSQL, Oracle, MongoDB, Cassandra, Neo4j
+- [x] File server connections: FTP, SFTP
+- [x] Object storage connections: AWS S3, GCS, Azure Blob
+- [x] API endpoint connections with auth types (none, basic, bearer, API key, OAuth 2.0)
+- [x] SMTP email server connections
+- [x] Connection testing functionality
+- [x] Consistent auth-aware navigation across all pages
 
 ## Current Structure
 
 | Path | Purpose |
 |------|---------|
 | `src/app/page.tsx` | Landing page with setup, login/signup navigation |
-| `src/app/signup/page.tsx` | User registration with optional company name |
-| `src/app/login/page.tsx` | User login with email/password |
-| `src/app/company-setup/page.tsx` | Company profile creation form |
-| `src/app/dashboard/page.tsx` | Authenticated dashboard with navigation |
-| `src/app/team/page.tsx` | Team management and engineer invitations |
-| `src/app/flows/page.tsx` | Flow listing and creation |
+| `src/app/signup/page.tsx` | User registration |
+| `src/app/login/page.tsx` | User login |
+| `src/app/company-setup/page.tsx` | Company profile creation |
+| `src/app/dashboard/page.tsx` | Authenticated dashboard |
+| `src/app/profile/page.tsx` | Engineer profile editor |
+| `src/app/team/page.tsx` | Team management |
+| `src/app/processor-groups/page.tsx` | Processor groups listing |
+| `src/app/processor-groups/[id]/page.tsx` | Processor group detail with pipelines |
+| `src/app/connections/page.tsx` | Connections management (DB, FTP, S3, API, SMTP) |
+| `src/app/flows/page.tsx` | Flow listing (legacy) |
 | `src/app/flows/[id]/page.tsx` | Visual flow editor |
-| `src/app/workflows/page.tsx` | Workflow library with documentation |
-| `src/app/databases/page.tsx` | Database connection manager & table browser |
+| `src/app/workflows/page.tsx` | Workflow library |
+| `src/app/databases/page.tsx` | Database connection manager (legacy) |
 | `src/app/data/page.tsx` | Data file browser |
-| `src/app/api/auth/signup/route.ts` | User registration API |
-| `src/app/api/auth/login/route.ts` | User login API |
-| `src/app/api/auth/logout/route.ts` | User logout API |
-| `src/app/api/auth/session/route.ts` | Session validation API |
-| `src/app/api/companies/route.ts` | Company CRUD API |
-| `src/app/api/companies/invite/route.ts` | Team member invite API |
-| `src/app/api/companies/members/route.ts` | List company members API |
-| `src/app/api/flows/` | Flow CRUD API |
-| `src/app/api/processors/` | Processor definitions API |
-| `src/app/api/databases/` | Database connections API |
-| `src/app/api/files/browse/` | File browser API |
-| `src/app/api/samples/generate/` | Sample data generator API |
-| `src/app/api/setup/` | One-click setup API |
-| `src/components/flow-editor/` | Canvas, palette, properties, toolbar, provenance |
-| `src/lib/types/` | TypeScript definitions (includes auth types) |
-| `src/lib/store/` | File-backed data store + auth store |
-| `src/lib/engine/` | Flow execution engine |
-| `src/lib/processors/` | 30+ processor definitions & executors |
-| `src/lib/data/` | Sample data, file store, database manager |
-| `src/lib/workflows/` | 10 workflow templates |
-| `README.md` | Project overview and quick start guide |
-| `docs/architecture.md` | System design, data flow, code structure |
-| `docs/processors.md` | All 30+ processors with config schemas |
-| `docs/workflows.md` | All 10 workflow templates with documentation |
-| `docs/databases.md` | All 14 database adapters and connection management |
-| `docs/sample-data.md` | Sample datasets and file formats |
-| `docs/api-reference.md` | All REST API endpoints |
-| `docs/data-persistence.md` | Storage layout and data formats |
-| `data/` | Persisted data directory (includes auth/ subdirectory) |
+| `src/app/api/auth/` | Auth API (signup, login, logout, session) |
+| `src/app/api/companies/` | Company API (CRUD, invite, members) |
+| `src/app/api/profile/` | Engineer profile API |
+| `src/app/api/processor-groups/` | Processor groups CRUD API |
+| `src/app/api/pipelines/` | Pipelines CRUD API |
+| `src/app/api/connections/` | Connections CRUD API |
+| `src/app/api/connections/types/` | Connection type definitions API |
+| `src/app/api/connections/test/` | Connection testing API |
+| `src/lib/types/` | TypeScript definitions |
+| `src/lib/store/auth-store.ts` | Auth store (users, sessions, companies) |
+| `src/lib/store/processor-group-store.ts` | Processor groups & pipelines store |
+| `src/lib/store/connections-store.ts` | Connections store with 15 type definitions |
+| `src/lib/store/index.ts` | Flows store (legacy) |
+| `src/lib/processors/definitions.ts` | 40+ processor definitions |
+| `src/lib/processors/executors.ts` | 40+ processor executors |
 
 ## Routes
 
 | Route | Description |
 |-------|-------------|
-| `/` | Landing page with setup, login/signup navigation |
+| `/` | Landing page |
 | `/signup` | User registration |
 | `/login` | User login |
-| `/company-setup` | Company profile creation (after signup) |
-| `/dashboard` | Authenticated dashboard with overview |
-| `/team` | Team management and engineer invitations |
-| `/flows` | Flow listing and creation |
+| `/company-setup` | Company profile creation |
+| `/dashboard` | Authenticated dashboard |
+| `/profile` | Engineer profile management |
+| `/team` | Team management & engineer invitations |
+| `/processor-groups` | Processor groups listing |
+| `/processor-groups/[id]` | Processor group detail with pipelines |
+| `/connections` | Connections management (all types) |
+| `/flows` | Flow listing |
 | `/flows/[id]` | Visual flow editor |
-| `/workflows` | Workflow library with documentation |
-| `/databases` | Database connection manager and table browser |
+| `/workflows` | Workflow library |
+| `/databases` | Database manager (legacy) |
 | `/data` | Data file browser |
+
+## Processor Types (40+)
+
+### Sources (7)
+file-input, json-input, csv-input, excel-input, parquet-input, xml-input, pdf-input
+
+### Sinks (7)
+file-output, json-output, csv-output, excel-output, parquet-output, xml-output, pdf-output
+
+### Transforms (8)
+json-transform, csv-transform, filter, merge, aggregate, sort, deduplicate, lookup
+
+### Multi-Language Scripts (6)
+sql-transform, python-script, ruby-script, scala-script, java-script, r-script
+
+### Database (5)
+db-query, db-create-table, db-insert, db-upsert, db-delete
+
+### Communication (2 + 4)
+email-send, webhook, api-call, api-response
+
+### Remote File Operations (6)
+ftp-upload, ftp-download, sftp-upload, sftp-download, s3-read, s3-write
+
+### Utility (3)
+data-generator, log, script
+
+## Connection Types (15)
+
+| Type | Category | Description |
+|------|----------|-------------|
+| postgresql | database | PostgreSQL database |
+| mysql | database | MySQL database |
+| mariadb | database | MariaDB database |
+| mssql | database | Microsoft SQL Server |
+| oracle | database | Oracle Database |
+| mongodb | database | MongoDB |
+| cassandra | database | Apache Cassandra |
+| neo4j | database | Neo4j graph database |
+| ftp | file-server | FTP server |
+| sftp | file-server | SFTP server |
+| s3 | object-storage | AWS S3 / compatible |
+| gcs | object-storage | Google Cloud Storage |
+| azure-blob | object-storage | Azure Blob Storage |
+| api | api | REST API endpoint |
+| smtp | email | SMTP email server |
 
 ## Data Directory Structure
 
 ```
 data/
-├── samples/
-│   ├── json/        (customers.json, products.json, orders.json, employees.json, transactions.json, inventory.json, .xml files)
-│   ├── csv/         (customers.csv, products.csv, orders.csv, employees.csv, transactions.csv)
-│   ├── excel/       (sales_report.xlsx.json, hr_data.xlsx.json)
-│   ├── parquet/     (customers.parquet.json, orders.parquet.json, transactions.parquet.json)
-│   └── pdf/         (sales_report_q4.pdf.txt, hr_report_2024.pdf.txt)
-├── outputs/
-│   ├── json/        (workflow output files)
-│   ├── csv/         (workflow output files)
-│   ├── excel/       (workflow output files)
-│   ├── parquet/     (workflow output files)
-│   ├── xml/         (workflow output files)
-│   └── pdf/         (workflow output files)
-├── databases/
-│   ├── connections/ (database connection configs)
-│   └── tables/      (database table data)
-├── workflows/
-│   └── flows/       (persisted flow definitions)
-└── provenance/
-    └── executions/  (execution history and events)
+├── auth/
+│   ├── users/         (user profiles with password hashes)
+│   ├── companies/     (company profiles)
+│   └── sessions/      (session tokens)
+├── processor-groups/
+│   ├── groups/        (processor group definitions)
+│   └── pipelines/     (pipeline definitions within groups)
+├── connections/       (database, file server, API, SMTP connections)
+├── samples/           (sample data files)
+├── outputs/           (pipeline output files)
+├── databases/         (legacy database connections)
+├── workflows/         (legacy flow definitions)
+└── provenance/        (execution history)
 ```
 
 ## Session History
@@ -135,8 +160,9 @@ data/
 | Date | Changes |
 |------|---------|
 | Initial | FlowForge MVP: visual editor, 6 processors, execution engine, provenance tracking |
-| Update | Enterprise expansion: 30+ processors, 14 DB adapters, 10 workflow templates, file persistence, data browser, database manager |
+| Update | Enterprise expansion: 30+ processors, 14 DB adapters, 10 workflow templates, file persistence |
 | Update | User auth: signup/login, company profiles, team management with role-based access |
+| Update | NiFi-style processor groups, pipelines, multi-language transforms (SQL/Python/Ruby/Scala/Java/R), centralized connections (DB/FTP/S3/API/SMTP), engineer profiles |
 
 ## Dependencies
 
