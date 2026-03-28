@@ -34,6 +34,12 @@ FlowForge is a comprehensive Apache NiFi-inspired data flow management platform 
 - [x] SMTP email server connections
 - [x] Connection testing functionality
 - [x] Consistent auth-aware navigation across all pages
+- [x] OAuth social login: GitHub, Google, Apple, Facebook, Twitter
+- [x] OAuth API routes (initiate, callback, providers list, link, unlink)
+- [x] OAuth account management (create user from OAuth, link accounts, unlink)
+- [x] OAuth callback page for handling provider redirects
+- [x] Social login buttons on login and signup pages
+- [x] .env.example with OAuth credential placeholders
 
 ## Current Structure
 
@@ -163,6 +169,7 @@ data/
 | Update | Enterprise expansion: 30+ processors, 14 DB adapters, 10 workflow templates, file persistence |
 | Update | User auth: signup/login, company profiles, team management with role-based access |
 | Update | NiFi-style processor groups, pipelines, multi-language transforms (SQL/Python/Ruby/Scala/Java/R), centralized connections (DB/FTP/S3/API/SMTP), engineer profiles |
+| Update | OAuth social login: GitHub, Google, Apple, Facebook, Twitter with account linking |
 
 ## Dependencies
 
