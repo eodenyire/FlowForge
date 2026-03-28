@@ -7,17 +7,21 @@ import type {
   Session,
   UserRole,
   CompanySettings,
+  OAuthAccount,
+  OAuthProvider,
 } from "@/lib/types";
 import { writeJsonFile, readJsonFile, listFiles, deleteFile } from "@/lib/data/file-store";
 
 const USERS_PREFIX = "auth/users/";
 const COMPANIES_PREFIX = "auth/companies/";
 const SESSIONS_PREFIX = "auth/sessions/";
+const OAUTH_PREFIX = "auth/oauth/";
 
 // In-memory caches backed by disk
 const usersCache = new Map<string, User>();
 const companiesCache = new Map<string, Company>();
 const sessionsCache = new Map<string, Session>();
+const oauthCache = new Map<string, OAuthAccount>(); // key: provider:providerAccountId
 let loaded = false;
 
 async function ensureLoaded() {
@@ -43,6 +47,13 @@ async function ensureLoaded() {
       if (file.endsWith(".json")) {
         const session = await readJsonFile<Session>(`${SESSIONS_PREFIX}${file}`);
         if (session) sessionsCache.set(session.token, session);
+      }
+    }
+    const oauthFiles = await listFiles(OAUTH_PREFIX);
+    for (const file of oauthFiles) {
+      if (file.endsWith(".json")) {
+        const account = await readJsonFile<OAuthAccount>(`${OAUTH_PREFIX}${file}`);
+        if (account) oauthCache.set(`${account.provider}:${account.providerAccountId}`, account);
       }
     }
   } catch {
@@ -294,6 +305,157 @@ export async function deleteCompany(id: string): Promise<boolean> {
   await ensureLoaded();
   companiesCache.delete(id);
   await deleteFile(`${COMPANIES_PREFIX}${id}.json`);
+  return true;
+}
+
+// OAuth account operations
+export async function findUserByOAuth(
+  provider: OAuthProvider,
+  providerAccountId: string
+): Promise<User | null> {
+  await ensureLoaded();
+  const account = oauthCache.get(`${provider}:${providerAccountId}`);
+  if (!account) return null;
+  return usersCache.get(account.userId) ?? null;
+}
+
+export async function getOAuthAccount(
+  provider: OAuthProvider,
+  providerAccountId: string
+): Promise<OAuthAccount | null> {
+  await ensureLoaded();
+  return oauthCache.get(`${provider}:${providerAccountId}`) ?? null;
+}
+
+export async function getOAuthAccountsForUser(
+  userId: string
+): Promise<OAuthAccount[]> {
+  await ensureLoaded();
+  return Array.from(oauthCache.values()).filter((a) => a.userId === userId);
+}
+
+export async function createOAuthUser(data: {
+  provider: OAuthProvider;
+  providerAccountId: string;
+  providerEmail: string;
+  providerName: string;
+  providerAvatarUrl: string;
+  accessToken: string;
+  refreshToken?: string;
+  companyId?: string | null;
+}): Promise<{ user: User; account: OAuthAccount }> {
+  await ensureLoaded();
+
+  const now = new Date().toISOString();
+
+  // Check if email already has an account
+  let user: User | undefined;
+  if (data.providerEmail) {
+    for (const u of usersCache.values()) {
+      if (u.email === data.providerEmail) {
+        user = u;
+        break;
+      }
+    }
+  }
+
+  // Create user if not found
+  if (!user) {
+    user = {
+      id: uuidv4(),
+      email: data.providerEmail || `${data.provider}_${data.providerAccountId}@oauth.flowforge.local`,
+      name: data.providerName || "OAuth User",
+      passwordHash: "", // No password for OAuth users
+      companyId: data.companyId ?? null,
+      role: "admin",
+      title: "",
+      department: "",
+      specializations: [],
+      bio: "",
+      phone: "",
+      location: "",
+      yearsExperience: 0,
+      preferredLanguages: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+    usersCache.set(user.id, user);
+    await writeJsonFile(`${USERS_PREFIX}${user.id}.json`, user);
+  }
+
+  // Create OAuth account
+  const account: OAuthAccount = {
+    id: uuidv4(),
+    userId: user.id,
+    provider: data.provider,
+    providerAccountId: data.providerAccountId,
+    providerEmail: data.providerEmail,
+    providerName: data.providerName,
+    providerAvatarUrl: data.providerAvatarUrl,
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken || "",
+    tokenExpiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  oauthCache.set(`${account.provider}:${account.providerAccountId}`, account);
+  await writeJsonFile(`${OAUTH_PREFIX}${account.id}.json`, account);
+
+  // Update user last login
+  user.lastLoginAt = now;
+  usersCache.set(user.id, user);
+  await writeJsonFile(`${USERS_PREFIX}${user.id}.json`, user);
+
+  return { user, account };
+}
+
+export async function linkOAuthAccount(data: {
+  userId: string;
+  provider: OAuthProvider;
+  providerAccountId: string;
+  providerEmail: string;
+  providerName: string;
+  providerAvatarUrl: string;
+  accessToken: string;
+  refreshToken?: string;
+}): Promise<OAuthAccount | null> {
+  await ensureLoaded();
+
+  const user = usersCache.get(data.userId);
+  if (!user) return null;
+
+  const now = new Date().toISOString();
+  const account: OAuthAccount = {
+    id: uuidv4(),
+    userId: data.userId,
+    provider: data.provider,
+    providerAccountId: data.providerAccountId,
+    providerEmail: data.providerEmail,
+    providerName: data.providerName,
+    providerAvatarUrl: data.providerAvatarUrl,
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken || "",
+    tokenExpiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  oauthCache.set(`${account.provider}:${account.providerAccountId}`, account);
+  await writeJsonFile(`${OAUTH_PREFIX}${account.id}.json`, account);
+  return account;
+}
+
+export async function unlinkOAuthAccount(
+  provider: OAuthProvider,
+  providerAccountId: string
+): Promise<boolean> {
+  await ensureLoaded();
+  const key = `${provider}:${providerAccountId}`;
+  const account = oauthCache.get(key);
+  if (!account) return false;
+  oauthCache.delete(key);
+  await deleteFile(`${OAUTH_PREFIX}${account.id}.json`);
   return true;
 }
 

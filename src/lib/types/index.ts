@@ -535,3 +535,44 @@ export interface ConnectionTypeDefinition {
   configFields: ConnectionConfigField[];
   defaultConfig: ConnectionConfig;
 }
+
+// OAuth types
+export type OAuthProvider = "github" | "google" | "apple" | "facebook" | "twitter";
+
+export interface OAuthAccount {
+  id: string;
+  userId: string;
+  provider: OAuthProvider;
+  providerAccountId: string;
+  providerEmail: string;
+  providerName: string;
+  providerAvatarUrl: string;
+  accessToken: string;
+  refreshToken: string;
+  tokenExpiresAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OAuthProviderConfig {
+  provider: OAuthProvider;
+  name: string;
+  icon: string;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  clientId: string;
+  clientSecret: string;
+  authorizeUrl: string;
+  tokenUrl: string;
+  userInfoUrl: string;
+  scopes: string[];
+  redirectUri: string;
+}
+
+export interface OAuthUserInfo {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl: string;
+}
