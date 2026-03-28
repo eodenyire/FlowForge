@@ -31,17 +31,40 @@ FlowForge is a comprehensive Apache NiFi-inspired data flow management platform 
 - [x] Database connections page (connection list, table browser)
 - [x] Workflow library page with documentation viewer
 - [x] One-click setup endpoint (creates all sample data, DB connections, workflow templates)
+- [x] User authentication system with scrypt password hashing and session tokens
+- [x] Company profile creation and management
+- [x] Team member invitation with role-based access (admin, engineer, viewer)
+- [x] Auth API routes: signup, login, logout, session check
+- [x] Company API routes: CRUD, invite members, list members
+- [x] Signup page with company name optional field
+- [x] Login page with session token storage
+- [x] Company setup page (industry, size, description, website)
+- [x] Dashboard page with auth guard and navigation header
+- [x] Team management page with invite form and member list
+- [x] Landing page updated with Login/Signup navigation
 
 ## Current Structure
 
 | Path | Purpose |
 |------|---------|
-| `src/app/page.tsx` | Landing page with setup and navigation |
+| `src/app/page.tsx` | Landing page with setup, login/signup navigation |
+| `src/app/signup/page.tsx` | User registration with optional company name |
+| `src/app/login/page.tsx` | User login with email/password |
+| `src/app/company-setup/page.tsx` | Company profile creation form |
+| `src/app/dashboard/page.tsx` | Authenticated dashboard with navigation |
+| `src/app/team/page.tsx` | Team management and engineer invitations |
 | `src/app/flows/page.tsx` | Flow listing and creation |
 | `src/app/flows/[id]/page.tsx` | Visual flow editor |
 | `src/app/workflows/page.tsx` | Workflow library with documentation |
 | `src/app/databases/page.tsx` | Database connection manager & table browser |
 | `src/app/data/page.tsx` | Data file browser |
+| `src/app/api/auth/signup/route.ts` | User registration API |
+| `src/app/api/auth/login/route.ts` | User login API |
+| `src/app/api/auth/logout/route.ts` | User logout API |
+| `src/app/api/auth/session/route.ts` | Session validation API |
+| `src/app/api/companies/route.ts` | Company CRUD API |
+| `src/app/api/companies/invite/route.ts` | Team member invite API |
+| `src/app/api/companies/members/route.ts` | List company members API |
 | `src/app/api/flows/` | Flow CRUD API |
 | `src/app/api/processors/` | Processor definitions API |
 | `src/app/api/databases/` | Database connections API |
@@ -49,8 +72,8 @@ FlowForge is a comprehensive Apache NiFi-inspired data flow management platform 
 | `src/app/api/samples/generate/` | Sample data generator API |
 | `src/app/api/setup/` | One-click setup API |
 | `src/components/flow-editor/` | Canvas, palette, properties, toolbar, provenance |
-| `src/lib/types/` | TypeScript definitions |
-| `src/lib/store/` | File-backed data store |
+| `src/lib/types/` | TypeScript definitions (includes auth types) |
+| `src/lib/store/` | File-backed data store + auth store |
 | `src/lib/engine/` | Flow execution engine |
 | `src/lib/processors/` | 30+ processor definitions & executors |
 | `src/lib/data/` | Sample data, file store, database manager |
@@ -63,13 +86,18 @@ FlowForge is a comprehensive Apache NiFi-inspired data flow management platform 
 | `docs/sample-data.md` | Sample datasets and file formats |
 | `docs/api-reference.md` | All REST API endpoints |
 | `docs/data-persistence.md` | Storage layout and data formats |
-| `data/` | Persisted data directory (samples, outputs, databases, workflows, provenance) |
+| `data/` | Persisted data directory (includes auth/ subdirectory) |
 
 ## Routes
 
 | Route | Description |
 |-------|-------------|
-| `/` | Landing page with setup button and navigation |
+| `/` | Landing page with setup, login/signup navigation |
+| `/signup` | User registration |
+| `/login` | User login |
+| `/company-setup` | Company profile creation (after signup) |
+| `/dashboard` | Authenticated dashboard with overview |
+| `/team` | Team management and engineer invitations |
 | `/flows` | Flow listing and creation |
 | `/flows/[id]` | Visual flow editor |
 | `/workflows` | Workflow library with documentation |
@@ -108,6 +136,7 @@ data/
 |------|---------|
 | Initial | FlowForge MVP: visual editor, 6 processors, execution engine, provenance tracking |
 | Update | Enterprise expansion: 30+ processors, 14 DB adapters, 10 workflow templates, file persistence, data browser, database manager |
+| Update | User auth: signup/login, company profiles, team management with role-based access |
 
 ## Dependencies
 
@@ -117,3 +146,4 @@ data/
 | papaparse | CSV parsing (available) |
 | next | Framework |
 | react/react-dom | UI |
+| crypto (built-in) | Password hashing (scrypt) and session token generation |
